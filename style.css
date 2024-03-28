@@ -22,13 +22,13 @@ button {
     cursor: pointer;
 }
 
-#wrapper {
-    width: fit-content;
-    padding: 0 8%;
-    position: relative;
+#leftCol {
+    width: 200px;
+    font-size: 1.25em;
 }
 
 #leftCol div {
+    width: 100%;
     margin-bottom: 20px;
     padding: 4px 16px;
     background-color: rgb(235, 246, 255);
@@ -38,9 +38,23 @@ button {
     text-align: center;
 }
 
-#leftCol div span {
+#leftCol #nextBlock {
+    height: 120px;
+}
+
+#leftCol #nextBlock img {
+    width: calc(100% - 48px);
+}
+
+#leftCol #scores span {
     color: #eedb00;
     font-weight: bold;
+}
+
+#wrapper {
+    width: fit-content;
+    padding: 0 8%;
+    position: relative;
 }
 
 .blurLayer {
