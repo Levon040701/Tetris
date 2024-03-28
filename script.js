@@ -1,13 +1,17 @@
-const colCount = 15;
-const rowCount = 25;
-const itemSize = 25;
-
 const DEG = Math.PI / 180;
+
+const colCount = 10;
+const rowCount = 20;
+const itemSize = 30;
+let speed = 1000;
 
 const playBtn = document.getElementById('playBtn');
 const resumeBtn = document.getElementById('resumeBtn');
 const pauseBtn = document.getElementById('pauseBtn');
 pauseBtn.onclick = pause;
+
+const nextBlockImage = document.createElement('img');
+nextBlockImage.src = '';
 
 const container = document.createElement('div');
 container.classList.add('container', 'blurLayer');
@@ -25,7 +29,6 @@ for (let i = 0; i < colCount * rowCount; i++) {
     cell.style.width = itemSize + 'px';
     cell.style.height = itemSize + 'px';
     cell.dataset.index = i;
-    // cell.textContent = i;
 
     container.append(cell);
 }
@@ -276,8 +279,18 @@ function clear(filledRows) {
 
     let scores = [0, 10, 20, 50, 100];
     let scoreElem = document.querySelector('#scores span');
+    let oldSpeedCoeff = Math.floor( Math.log10(+scoreElem.textContent) );
+    if (oldSpeedCoeff < 0) {
+        oldSpeedCoeff = 0;
+    }
     scoreElem.textContent = +scoreElem.textContent + scores[filledRows.length] + '';
-    
+    let newSpeedCoeff = Math.floor( Math.log10(+scoreElem.textContent) );
+    if (newSpeedCoeff < 0) {
+        newSpeedCoeff = 0;
+    }
+    if (newSpeedCoeff > oldSpeedCoeff) {
+        speed = Math.floor(speed / Math.pow(2, newSpeedCoeff - oldSpeedCoeff));
+    }
 }
 
 function blurAnimation(elem) {
@@ -299,92 +312,91 @@ function blurAnimation(elem) {
     }, 5);
 }
 
-let keyPressHandler;
+let eventHandler;
 let run = null;
 let f;
+let next;
+
+function keyPress(f, e) {
+    if (e.key === 'z') {
+        f.rotate();
+        removeClassFromAll(['active', f.name]);
+        drawFigure(f, ['active', f.name]);
+    }
+    if (e.key === 'ArrowUp') {
+        f.rotate(90*DEG);
+        removeClassFromAll(['active', f.name]);
+        drawFigure(f, ['active', f.name]);
+    }
+    if (e.key === 'ArrowLeft' && f.canMove('left')) {
+        f.move(false);
+        removeClassFromAll(['active', f.name]);
+        drawFigure(f, ['active', f.name]);
+    }
+    if (e.key === 'ArrowRight' && f.canMove('right')) {
+        f.move();
+        removeClassFromAll(['active', f.name]);
+        drawFigure(f, ['active', f.name]);
+    }
+    if (e.key === 'ArrowDown') {
+        clearInterval(run);
+        run = setInterval(function () {
+            fallAnimation();
+        }, speed);
+        if (f.canMove('down')) {
+            f.fall()
+        };
+        removeClassFromAll(['active', f.name]);
+        drawFigure(f, ['active', f.name]);
+    }
+    if (e.key === ' ') {
+        while (f.canMove('down')) {
+            f.fall();
+        }
+        removeClassFromAll(['active', f.name]);
+        drawFigure(f, ['active', f.name]);
+    }
+};
 
 function createFigure() {
+    let newFigure = null;
     let randFig = Math.floor(Math.random() * 7);
 
     switch (randFig) {
         case 0:
-            f = new Square();
+            newFigure = new Square();
             break;
         case 1:
-            f = new L();
+            newFigure = new L();
             break;
         case 2:
-            f = new ReverseL();
+            newFigure = new ReverseL();
             break;
         case 3:
-            f = new Z();
+            newFigure = new Z();
             break;
         case 4:
-            f = new ReverseZ();
+            newFigure = new ReverseZ();
             break;
         case 5:
-            f = new T();
+            newFigure = new T();
             break;
         case 6:
-            f = new Stick();
+            newFigure = new Stick();
             break;
         default:
             break;
     }
     let randAngle = Math.floor(Math.random() * 4);
     for (let i = 0; i < randAngle; i++) {
-        f.rotate();
+        newFigure.rotate();
     }
 
-    let randCell = Math.floor(Math.random() * (colCount - max(f.cords, 0) + min(f.cords, 0))) - min(f.cords, 0);
-    f.center = randCell + colCount * (min(f.cords, 1) - 1);
+    let randCell = Math.floor(Math.random() * (colCount - max(newFigure.cords, 0) + min(newFigure.cords, 0))) - min(newFigure.cords, 0);
+    newFigure.center = randCell + colCount * (min(newFigure.cords, 1) - 1);
     
-    drawFigure(f, ['active', f.name]);
-    
-    keyPressHandler = function (e) {
-        console.log(`Key "${e.key}"`);
-        if (e.key === 'z') {
-            f.rotate();
-            removeClassFromAll(['active', f.name]);
-            drawFigure(f, ['active', f.name]);
-        }
-        if (e.key === 'ArrowUp') {
-            f.rotate(90*DEG);
-            removeClassFromAll(['active', f.name]);
-            drawFigure(f, ['active', f.name]);
-        }
-        if (e.key === 'ArrowLeft' && f.canMove('left')) {
-            f.move(false);
-            removeClassFromAll(['active', f.name]);
-            drawFigure(f, ['active', f.name]);
-        }
-        if (e.key === 'ArrowRight' && f.canMove('right')) {
-            f.move();
-            removeClassFromAll(['active', f.name]);
-            drawFigure(f, ['active', f.name]);
-        }
-        if (e.key === 'ArrowDown') {
-            clearInterval(run);
-            run = setInterval(function () {
-                fallAnimation(f);
-            }, 500);
-            if (f.canMove('down')) {
-                f.fall()
-            };
-            removeClassFromAll(['active', f.name]);
-            drawFigure(f, ['active', f.name]);
-        }
-        if (e.key === ' ') {
-            while (f.canMove('down')) {
-                f.fall();
-            }
-            removeClassFromAll(['active', f.name]);
-            drawFigure(f, ['active', f.name]);
-        }
-    };
-    document.body.addEventListener("keydown", keyPressHandler);
-    console.log(f);
-    return f;
+    drawFigure(newFigure, ['active', newFigure.name]);
+    return newFigure;
 }
 
 function endGame() {
@@ -395,6 +407,7 @@ function endGame() {
 }
 
 function startGame() {
+    speed = 1000;
     document.querySelector('#scores span').textContent = '0';
     let occupiedCells = [...document.getElementsByClassName('floor'), ...document.getElementsByClassName('active')];
     let length = occupiedCells.length;
@@ -402,7 +415,8 @@ function startGame() {
         occupiedCells[i].className = 'cell';
     }
     f = null;
-    document.body.removeEventListener('keydown', keyPressHandler);
+    next = null;
+    document.body.removeEventListener('keydown', eventHandler);
     play();
 }
 
@@ -410,29 +424,21 @@ function play() {
     pauseBtn.onclick = pause;
     resumeBtn.style.display = 'none';
     document.getElementById('newGame').style.display = 'none';
-    if (!f) {
-        f = createFigure();
+    if (!next) {
+        next = createFigure();
+        f = next;
+        eventHandler = function (e) {
+            keyPress(f, e);
+        }
+        document.body.addEventListener("keydown", eventHandler);
+        next = createFigure();
+        nextBlockImage.src = `./images/${next.name}.png`;
+        document.getElementById('nextBlock').append(nextBlockImage);
     }
 
     run = setInterval(function () {
-        // OLD VERSION
-        // const activeEl = document.querySelectorAll('.cell.active');
-        // for (let i = 0; i < activeEl.length; i++) {
-        //     const activeIndex = activeEl[i].dataset.index;
-        //     const nextIndex = +activeIndex + colCount;
-        //     let nextEl = document.querySelector(`.cell[data-index="${nextIndex}"]`);
-    
-        //     if (nextIndex >= colCount * rowCount) {
-        //         clearInterval(run);
-        //     } else {
-        //         activeEl[i].classList.remove('active');
-        //         // nextEl = document.querySelector(`.cell[data-index="${nextIndex - rowCount * colCount}"]`);
-        //         nextEl.classList.add('active');
-        //     }
-        // }
-
-        fallAnimation(f);
-    }, 500);
+        fallAnimation();
+    }, speed);
 }
 
 function pause() {
@@ -445,19 +451,20 @@ function pause() {
     blurAnimation(document.getElementById('newGame'));
 }
 
-function fallAnimation(f) {
+function fallAnimation() {
     if ( !f.canMove('down') && f.center - max(f.cords, 1) < 0 ) {
+        next = null;
         f = null;
-        document.body.removeEventListener('keydown', keyPressHandler);
+        document.body.removeEventListener('keydown', eventHandler);
         clearInterval(run);
         endGame();
         return;
     }
     
-    
     if ( !f.canMove('down') ) {
         removeClassFromAll('active');
         drawFigure(f, 'floor');
+        clearInterval(run);
         let filledRows = [];
         for (let i = min(f.cords, 1); i <= max(f.cords, 1); i++) {
             let rowIndex = Math.floor(f.center / colCount) - i;
@@ -467,14 +474,20 @@ function fallAnimation(f) {
         }
         clear(filledRows);
 
-        f = null;
-        document.body.removeEventListener('keydown', keyPressHandler);
-        clearInterval(run);
+        document.body.removeEventListener('keydown', eventHandler);
+        f = next;
+        eventHandler = function (e) {
+            keyPress(f, e);
+        }
+        document.body.addEventListener("keydown", eventHandler);
 
-        f = createFigure();
+        next = createFigure();
+        nextBlockImage.src = `./images/${next.name}.png`;
+        document.getElementById('nextBlock').append(nextBlockImage);
+
         run = setInterval(function () {
-            fallAnimation(f);
-        }, 500);
+            fallAnimation();
+        }, speed);
     }
 
     f.fall();
