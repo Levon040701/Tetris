@@ -3,6 +3,7 @@ const DEG = Math.PI / 180;
 const colCount = 10;
 const rowCount = 20;
 const itemSize = 30;
+const figures = [Square, L, ReverseL, Z, ReverseZ, T, Stick];
 let speed = 1000;
 
 const playBtn = document.getElementById('playBtn');
@@ -157,6 +158,7 @@ class Square extends Figure {
         super(center, [[0, 0], [1, 0], [1, -1], [0, -1]]);
         this.name = 'square';
     }
+    static count = 0;
 
     rotate(angle=-90*DEG) {
         return this;
@@ -168,6 +170,7 @@ class L extends Figure {
         super(center, [[0, 0], [1, 0], [-1, 0], [-1, -1]]);
         this.name = 'l';
     }
+    static count = 0;
 }
 
 class ReverseL extends Figure {
@@ -175,6 +178,7 @@ class ReverseL extends Figure {
         super(center, [[0, 0], [1, 0], [-1, 0], [1, -1]]);
         this.name = 'reversel';
     }
+    static count = 0;
 }
 
 class Z extends Figure {
@@ -182,6 +186,7 @@ class Z extends Figure {
         super(center, [[0, 0], [1, 0], [0, 1], [-1, 1]]);
         this.name = 'z';
     }
+    static count = 0;
 }
 
 class ReverseZ extends Figure {
@@ -189,6 +194,7 @@ class ReverseZ extends Figure {
         super(center, [[0, 0], [-1, 0], [0, 1], [1, 1]]);
         this.name = 'reversez';
     }
+    static count = 0;
 }
 
 class T extends Figure {
@@ -196,6 +202,7 @@ class T extends Figure {
         super(center, [[0, 0], [-1, 0], [0, 1], [1, 0]]);
         this.name = 't';
     }
+    static count = 0;
 }
 
 class Stick extends Figure {
@@ -203,6 +210,43 @@ class Stick extends Figure {
         super(center, [[0, 0], [-1, 0], [1, 0], [2, 0]]);
         this.name = 'stick';
     }
+    static count = 0;
+}
+
+function myRand() {
+    let figureCounts = [];
+    let allCount = 0;
+    for (let i = 0; i < figures.length; i++) {
+        figureCounts[i] = figures[i].count;
+        allCount += figures[i].count;
+    }
+
+    let weights = [];
+    for (let i = 0; i < figures.length; i++) {
+        let figureWeight = (1 - (figureCounts[i] / allCount)) / 6;
+        if (Number.isNaN(figureWeight)) {
+            figureWeight = 1 / figures.length;
+        }
+        weights.push(figureWeight);
+    }
+    this.weights = weights;
+
+    let randomNum = Math.random();
+    for (let i = 0; i < figures.length; i++) {
+        if (randomNum <= arraySum(weights, 0, i + 1)) {
+            figures[i].count++;
+            return new figures[i];
+        }
+    }
+}
+
+function arraySum(arr, start, end) {
+    let sum = 0;
+    for (let i = start; i < end; i++) {
+        sum += arr[i];
+    }
+
+    return sum;
 }
 
 function removeClassFromAll(className) {
@@ -360,33 +404,42 @@ function keyPress(f, e) {
 
 function createFigure() {
     let newFigure = null;
-    let randFig = Math.floor(Math.random() * 7);
+    // let randFig = Math.floor(Math.random() * 7);
 
-    switch (randFig) {
-        case 0:
-            newFigure = new Square();
-            break;
-        case 1:
-            newFigure = new L();
-            break;
-        case 2:
-            newFigure = new ReverseL();
-            break;
-        case 3:
-            newFigure = new Z();
-            break;
-        case 4:
-            newFigure = new ReverseZ();
-            break;
-        case 5:
-            newFigure = new T();
-            break;
-        case 6:
-            newFigure = new Stick();
-            break;
-        default:
-            break;
-    }
+    // switch (randFig) {
+    //     case 0:
+    //         newFigure = new Square();
+    //         Square.count++;
+    //         break;
+    //     case 1:
+    //         newFigure = new L();
+    //         L.count++;
+    //         break;
+    //     case 2:
+    //         newFigure = new ReverseL();
+    //         ReverseL.count++;
+    //         break;
+    //     case 3:
+    //         newFigure = new Z();
+    //         Z.count++;
+    //         break;
+    //     case 4:
+    //         newFigure = new ReverseZ();
+    //         ReverseZ.count++;
+    //         break;
+    //     case 5:
+    //         newFigure = new T();
+    //         T.count++;
+    //         break;
+    //     case 6:
+    //         newFigure = new Stick();
+    //         Stick.count++;
+    //         break;
+    //     default:
+    //         break;
+    // }
+
+    newFigure = myRand();
     let randAngle = Math.floor(Math.random() * 4);
     for (let i = 0; i < randAngle; i++) {
         newFigure.rotate();
@@ -408,6 +461,9 @@ function endGame() {
 
 function startGame() {
     speed = 1000;
+    for (let i = 0; i < figures.length; i++) {
+        figures[i].count = 0;
+    }
     document.querySelector('#scores span').textContent = '0';
     let occupiedCells = [...document.getElementsByClassName('floor'), ...document.getElementsByClassName('active')];
     let length = occupiedCells.length;
