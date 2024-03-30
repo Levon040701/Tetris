@@ -3,7 +3,6 @@ const DEG = Math.PI / 180;
 const colCount = 10;
 const rowCount = 20;
 const itemSize = 30;
-const figures = [Square, L, ReverseL, Z, ReverseZ, T, Stick];
 let speed = 1000;
 
 const playBtn = document.getElementById('playBtn');
@@ -212,6 +211,8 @@ class Stick extends Figure {
     }
     static count = 0;
 }
+
+const figures = [Square, L, ReverseL, Z, ReverseZ, T, Stick];
 
 function myRand() {
     let figureCounts = [];
